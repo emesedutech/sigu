@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import Layout from './components/layout/Layout'
+import Layout        from './components/layout/Layout'
 import LoginPage     from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import StudentsPage  from './pages/StudentsPage'
@@ -8,6 +8,8 @@ import AttendancePage from './pages/AttendancePage'
 import GradesPage    from './pages/GradesPage'
 import BehaviorPage  from './pages/BehaviorPage'
 import SchedulePage  from './pages/SchedulePage'
+import PrintPage     from './pages/PrintPage'
+import SettingsPage  from './pages/SettingsPage'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -34,6 +36,8 @@ function AppContent() {
     grades:     <GradesPage />,
     behavior:   <BehaviorPage />,
     schedule:   <SchedulePage />,
+    print:      <PrintPage />,
+    settings:   <SettingsPage />,
   }
 
   return (
