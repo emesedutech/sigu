@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import {
   Users, ClipboardCheck, BookOpen, Calendar,
-  TrendingUp, Clock, CheckCircle2, XCircle, HeartPulse
+  TrendingUp, Clock, CheckCircle2, XCircle, Activity
 } from 'lucide-react'
 
 const TODAY = new Date().toISOString().slice(0, 10)
@@ -77,7 +77,7 @@ export default function DashboardPage({ setPage }) {
           { label: 'Total Siswa',  value: stats.students, icon: Users,         color: 'bg-brand-50 text-brand-600',   action: () => setPage('students') },
           { label: 'Hadir Hari Ini', value: stats.hadir, icon: CheckCircle2,  color: 'bg-emerald-50 text-emerald-600', action: () => setPage('attendance') },
           { label: 'Alpa',          value: stats.alpa,   icon: XCircle,       color: 'bg-rose-50 text-rose-600',      action: () => setPage('attendance') },
-          { label: 'Sakit/Izin',    value: stats.sakit + stats.izin, icon: HeartPulse, color: 'bg-amber-50 text-amber-600', action: () => setPage('attendance') },
+          { label: 'Sakit/Izin',    value: stats.sakit + stats.izin, icon: Activity, color: 'bg-amber-50 text-amber-600', action: () => setPage('attendance') },
         ].map(s => {
           const Icon = s.icon
           return (
@@ -135,7 +135,7 @@ export default function DashboardPage({ setPage }) {
             {[
               { label: 'Catat Absensi', icon: ClipboardCheck, page: 'attendance', color: 'border-emerald-200 hover:bg-emerald-50 text-emerald-700' },
               { label: 'Input Nilai',   icon: BookOpen,       page: 'grades',     color: 'border-brand-200 hover:bg-brand-50 text-brand-700' },
-              { label: 'Jurnal Sikap',  icon: HeartPulse,     page: 'behavior',   color: 'border-violet-200 hover:bg-violet-50 text-violet-700' },
+              { label: 'Jurnal Sikap',  icon: Activity,     page: 'behavior',   color: 'border-violet-200 hover:bg-violet-50 text-violet-700' },
               { label: 'Tambah Siswa',  icon: Users,          page: 'students',   color: 'border-amber-200 hover:bg-amber-50 text-amber-700' },
             ].map(a => {
               const Icon = a.icon

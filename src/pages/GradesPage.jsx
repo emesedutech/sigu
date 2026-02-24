@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import {
   BookOpen, Save, Loader2, ChevronLeft, ChevronRight,
-  BarChart2, TrendingUp, TrendingDown, Minus, FileText, Users
+  BarChart2, TrendingUp, TrendingDown, FileText, Users
 } from 'lucide-react'
 
 const toISO  = d => d.toISOString().slice(0, 10)

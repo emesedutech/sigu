@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import {
-  CheckCircle2, Clock, HeartPulse, XCircle,
+  CheckCircle2, Clock, Activity, XCircle,
   ChevronLeft, ChevronRight, Save, Loader2, Users,
-  BarChart2, CalendarDays, FileText
+  BarChart2, CalendarCheck, FileText
 } from 'lucide-react'
 
 const STATUS_CFG = {
   Hadir: { color: 'bg-emerald-500', light: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
   Izin:  { color: 'bg-sky-500',     light: 'bg-sky-50 text-sky-700 border-sky-200',             icon: Clock       },
-  Sakit: { color: 'bg-amber-500',   light: 'bg-amber-50 text-amber-700 border-amber-200',       icon: HeartPulse  },
+  Sakit: { color: 'bg-amber-500',   light: 'bg-amber-50 text-amber-700 border-amber-200',       icon: Activity  },
   Alpa:  { color: 'bg-rose-500',    light: 'bg-rose-50 text-rose-700 border-rose-200',          icon: XCircle     },
 }
 const STATUSES = Object.keys(STATUS_CFG)
@@ -134,7 +134,7 @@ export default function AttendancePage() {
           <p className="text-slate-500 text-sm">Input dan rekap kehadiran siswa</p>
         </div>
         <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-          {[['input', CalendarDays, 'Input'], ['rekap', BarChart2, 'Rekap']].map(([id, Icon, label]) => (
+          {[['input', CalendarCheck, 'Input'], ['rekap', BarChart2, 'Rekap']].map(([id, Icon, label]) => (
             <button key={id} onClick={() => setTab(id)}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors
                 ${tab === id ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
@@ -425,7 +425,7 @@ export default function AttendancePage() {
               {rekapDates.length > 0 && (
                 <div className="card overflow-hidden">
                   <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-                    <CalendarDays size={15} className="text-brand-500" />
+                    <CalendarCheck size={15} className="text-brand-500" />
                     <h3 className="font-display font-bold text-slate-800 text-sm">
                       Detail Per Tanggal <span className="text-slate-400 font-normal">({rekapDates.length} hari aktif)</span>
                     </h3>

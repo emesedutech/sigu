@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import Papa from 'papaparse'
 import {
-  Users, Plus, Search, Upload, Trash2, Edit3, X,
-  Download, CheckCircle2, AlertTriangle, Loader2, Filter
+  Users, Plus, Search, Upload, Trash2, Pencil, X,
+  Download, CheckCircle2, AlertCircle, Loader2, Filter
 } from 'lucide-react'
 
 const GENDERS = { L: 'Laki-laki', P: 'Perempuan' }
@@ -27,7 +27,7 @@ export default function StudentsPage() {
   const [csvInvalid, setCsvInvalid] = useState([])
   const [csvStage,   setCsvStage]   = useState('idle') // idle|preview|importing|done
   const [csvProgress, setCsvProgress] = useState(0)
-  const [csvResult,   setCsvResult]   = useState({ inserted: 0 })
+  const [csvResult,   setCsvResult]   = useState({ inserted: 0, updated: 0, failed: 0 })
   const fileRef = useRef(null)
 
   const load = async () => {
@@ -92,23 +92,61 @@ export default function StudentsPage() {
   const runImport = async () => {
     setCsvStage('importing')
     let inserted = 0
-    const BATCH = 50
-    for (let i = 0; i < csvValid.length; i += BATCH) {
-      const batch = csvValid.slice(i, i + BATCH).map(r => ({
+    let updated  = 0
+    let failed   = 0
+
+    // Fetch existing NISNs for this teacher to decide insert vs update
+    const { data: existing } = await supabase
+      .from('students')
+      .select('id, nisn')
+      .eq('teacher_id', user.id)
+    const nisnToId = {}
+    ;(existing || []).forEach(s => { if (s.nisn) nisnToId[String(s.nisn).trim()] = s.id })
+
+    const toInsert = []
+    const toUpdate = []
+
+    csvValid.forEach(r => {
+      const nisn = r.nisn ? String(r.nisn).trim() : null
+      const row = {
         teacher_id: user.id,
-        nisn: r.nisn ? String(r.nisn).trim() : null,
-        name: String(r.name).trim(),
-        class: String(r.class).trim(),
+        nisn,
+        name:   String(r.name).trim(),
+        class:  String(r.class).trim(),
         gender: r.gender,
-      }))
-      const { data } = await supabase.from('students').upsert(batch, { onConflict: 'nisn', ignoreDuplicates: false }).select()
-      inserted += data?.length || 0
-      setCsvProgress(Math.round(((i + BATCH) / csvValid.length) * 100))
+      }
+      if (nisn && nisnToId[nisn]) {
+        toUpdate.push({ id: nisnToId[nisn], ...row })
+      } else {
+        toInsert.push(row)
+      }
+    })
+
+    // Insert new students in batches of 50
+    const BATCH = 50
+    for (let i = 0; i < toInsert.length; i += BATCH) {
+      const batch = toInsert.slice(i, i + BATCH)
+      const { data, error } = await supabase.from('students').insert(batch).select()
+      if (!error) inserted += data?.length || 0
+      else failed++
+      setCsvProgress(Math.round(((i + BATCH) / Math.max(csvValid.length, 1)) * 70))
     }
-    setCsvResult({ inserted }); setCsvStage('done'); load()
+
+    // Update existing students one by one (or in batch via upsert with id)
+    for (let i = 0; i < toUpdate.length; i++) {
+      const { id, ...fields } = toUpdate[i]
+      const { error } = await supabase.from('students').update(fields).eq('id', id)
+      if (!error) updated++
+      else failed++
+      setCsvProgress(70 + Math.round(((i + 1) / Math.max(toUpdate.length, 1)) * 30))
+    }
+
+    setCsvResult({ inserted, updated, failed })
+    setCsvStage('done')
+    load()
   }
 
-  const resetCSV = () => { setCsvStage('idle'); setCsvValid([]); setCsvInvalid([]); setCsvProgress(0); if (fileRef.current) fileRef.current.value = '' }
+  const resetCSV = () => { setCsvStage('idle'); setCsvValid([]); setCsvInvalid([]); setCsvProgress(0); setCsvResult({ inserted: 0, updated: 0, failed: 0 }); if (fileRef.current) fileRef.current.value = '' }
 
   return (
     <div className="space-y-5 animate-fadeUp">
@@ -171,7 +209,7 @@ export default function StudentsPage() {
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                    <Edit3 size={14} />
+                    <Pencil size={14} />
                   </button>
                   <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors">
                     <Trash2 size={14} />
@@ -292,9 +330,27 @@ export default function StudentsPage() {
               )}
 
               {csvStage === 'done' && (
-                <div className="text-center py-8 space-y-3">
+                <div className="text-center py-8 space-y-4">
                   <CheckCircle2 size={48} className="mx-auto text-emerald-500" />
-                  <p className="font-bold text-xl text-slate-800">{csvResult.inserted} siswa diimport!</p>
+                  <div>
+                    <p className="font-bold text-xl text-slate-800">Import Selesai!</p>
+                    <div className="flex justify-center gap-4 mt-3">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-emerald-600">{csvResult.inserted}</div>
+                        <div className="text-xs text-slate-500">Siswa baru</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-brand-600">{csvResult.updated}</div>
+                        <div className="text-xs text-slate-500">Diperbarui</div>
+                      </div>
+                      {csvResult.failed > 0 && (
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-rose-500">{csvResult.failed}</div>
+                          <div className="text-xs text-slate-500">Gagal</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <button onClick={() => { setModal(null); resetCSV() }} className="btn-primary px-8">Tutup</button>
                 </div>
               )}
